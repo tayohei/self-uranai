@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セルフ占い棒 導きの竹棒</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Serif JP (明朝体) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f5f0e6; /* 和紙風の落ち着いたベージュ */
+            color: #3e2a14; /* 墨や濃い茶色をイメージ */
+            background-image: radial-gradient(#e8dfcd 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cylinder-wrapper {
+            position: relative;
+            width: 140px;
+            height: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin: 0 auto;
+        }
+
+        /* 筒本体（竹筒） */
+        .cylinder {
+            position: absolute;
+            bottom: 0;
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(to right, #2c4c27 0%, #4a7c43 15%, #4a7c43 85%, #1e361b 100%);
+            border-radius: 8px 8px 24px 24px;
+            z-index: 10;
+            box-shadow: inset 0px -10px 15px rgba(0,0,0,0.4), 0px 12px 20px rgba(0,0,0,0.3);
+            border: 1px solid #1a2f17;
+        }
+
+        /* 筒の節（竹の節を表現） */
+        .cylinder::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -2px;
+            right: -2px;
+            height: 6px;
+            background: rgba(0,0,0,0.15);
+            border-top: 2px solid #5c9953;
+            border-bottom: 1px solid #1e361b;
+            border-radius: 50%;
+        }
+
+        /* 筒の内部の暗がり */
+        .cylinder-hole {
+            position: absolute;
+            bottom: 140px; /* height 160 - radius 20 */
+            width: 120px;
+            height: 40px;
+            background: #111e0e;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: inset 0 8px 15px rgba(0,0,0,0.9);
+        }
+
+        /* 筒のフチ（手前側） */
+        .cylinder-rim {
+            position: absolute;
+            bottom: 140px;
+            width: 120px;
+            height: 40px;
+            border: 6px solid #538b4b;
+            border-top-color: transparent; /* 奥のフチは見えなくする */
+            border-radius: 50%;
+            z-index: 12; /* 棒より手前 */
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 竹棒 */
+        .stick {
+            position: absolute;
+            bottom: 20px; /* 筒の中に沈んでいる状態 */
+            width: 32px;
+            height: 220px;
+            background: linear-gradient(to right, #cba471, #f4e3c5, #cba471);
+            border-radius: 16px 16px 2px 2px;
+            z-index: 8; /* hole(5) と rim(12) の間 */
+            transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateY(0);
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.15), 3px 0px 6px rgba(0,0,0,0.4);
+            border: 1px solid #a67c45;
+        }
+
+        /* 棒に書かれた文字 */
+        .stick-text {
+            font-size: 28px;
+            font-weight: 900;
+            color: #2b1d0e;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            transition-delay: 0s;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+        }
+
+        /* 引かれた状態のクラス */
+        .stick.drawn {
+            transform: translateY(-160px);
+        }
+        .stick.drawn .stick-text {
+            opacity: 1;
+            transition-delay: 0.4s; /* 棒が出きったあとに文字が浮かび上がる */
+        }
+
+        @keyframes shakeCylinder {
+            0% { transform: rotate(0deg); }
+            20% { transform: rotate(4deg); }
+            40% { transform: rotate(-4deg); }
+            60% { transform: rotate(2deg); }
+            80% { transform: rotate(-2deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .is-shaking {
+            animation: shakeCylinder 0.5s ease-in-out;
+        }
+
+        .btn-traditional {
+            background-color: #7b5b3a;
+            color: #f5f0e6;
+            border: 2px solid #4a3520;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .btn-traditional:hover:not(:disabled) {
+            background-color: #8c6a47;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        .btn-traditional:active:not(:disabled) {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .btn-traditional:disabled {
+            background-color: #a8a096;
+            border-color: #888279;
+            color: #d0c8be;
+            cursor: not-allowed;
+        }
+
+        /* タイトルの装飾 */
+        .title-decoration::before, .title-decoration::after {
+            content: '◆';
+            color: #7b5b3a;
+            font-size: 0.7em;
+            vertical-align: middle;
+            margin: 0 15px;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <header class="text-center my-8">
+        <h1 class="text-3xl sm:text-5xl font-black mb-4 title-decoration tracking-widest text-[#2b1d0e]">
+            セルフ占い棒
+        </h1>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-widest text-[#4a7c43]">
+            導きの竹棒
+        </h2>
+        <p class="mt-6 text-sm sm:text-base text-gray-700">
+            左右の筒から一本ずつ引き、組み合わせから自らの道を読み解いてください。
+        </p>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto flex flex-col md:flex-row justify-center items-center gap-12 md:gap-24 mb-12">
+
+        <!-- 左の筒（漢字） -->
+        <section class="flex flex-col items-center w-full max-w-xs bg-white/40 p-6 rounded-2xl shadow-lg border border-[#e8dfcd]">
+            <h3 class="text-xl font-bold mb-1 border-b-2 border-[#7b5b3a] pb-1">左の筒（漢字）</h3>
+            <p class="mb-6 font-semibold text-gray-600">残り: <span id="left-count" class="text-2xl text-[#2b1d0e]">27</span>本</p>
+
+            <div id="left-wrapper" class="cylinder-wrapper mb-8">
+                <div id="left-stick" class="stick">
+                    <span id="left-result" class="stick-text"></span>
+                </div>
+                <div class="cylinder-hole"></div>
+                <div class="cylinder-rim"></div>
+                <div class="cylinder"></div>
+            </div>
+
+            <button id="btn-draw-left" class="btn-traditional px-8 py-3 rounded-full text-lg font-bold w-full shadow-md">
+                左から引く
+            </button>
+        </section>
+
+        <!-- 右の筒（数字） -->
+        <section class="flex flex-col items-center w-full max-w-xs bg-white/40 p-6 rounded-2xl shadow-lg border border-[#e8dfcd]">
+            <h3 class="text-xl font-bold mb-1 border-b-2 border-[#7b5b3a] pb-1">右の筒（数字）</h3>
+            <p class="mb-6 font-semibold text-gray-600">残り: <span id="right-count" class="text-2xl text-[#2b1d0e]">27</span>本</p>
+
+            <div id="right-wrapper" class="cylinder-wrapper mb-8">
+                <div id="right-stick" class="stick">
+                    <span id="right-result" class="stick-text"></span>
+                </div>
+                <div class="cylinder-hole"></div>
+                <div class="cylinder-rim"></div>
+                <div class="cylinder"></div>
+            </div>
+
+            <button id="btn-draw-right" class="btn-traditional px-8 py-3 rounded-full text-lg font-bold w-full shadow-md">
+                右から引く
+            </button>
+        </section>
+
+    </main>
+
+    <footer class="mt-auto text-center pb-8">
+        <button id="btn-reset" class="px-6 py-2 border-2 border-[#7b5b3a] text-[#7b5b3a] bg-transparent hover:bg-[#7b5b3a] hover:text-white rounded-full font-bold transition-colors">
+            最初からやり直す (全て筒に戻す)
+        </button>
+    </footer>
+
+    <script>
+        // 定数定義
+        const KANJI_TYPES = ['盛', '幸', '開', '成', '試', '業', '愛', '縁', '夢'];
+        const NUMBER_TYPES = ['１', '２', '３', '４', '５', '６', '７', '８', '９'];
+        const COPIES_PER_TYPE = 3;
+
+        // 状態変数
+        let leftDeck = [];
+        let rightDeck = [];
+        let isAnimatingLeft = false;
+        let isAnimatingRight = false;
+
+        // DOM要素の取得
+        const elLeftCount = document.getElementById('left-count');
+        const elRightCount = document.getElementById('right-count');
+        const elLeftStick = document.getElementById('left-stick');
+        const elRightStick = document.getElementById('right-stick');
+        const elLeftResult = document.getElementById('left-result');
+        const elRightResult = document.getElementById('right-result');
+        const elLeftWrapper = document.getElementById('left-wrapper');
+        const elRightWrapper = document.getElementById('right-wrapper');
+        const btnDrawLeft = document.getElementById('btn-draw-left');
+        const btnDrawRight = document.getElementById('btn-draw-right');
+        const btnReset = document.getElementById('btn-reset');
+
+        /**
+         * 配列を生成し、シャッフルして返す
+         */
+        function initializeDeck(typesArray) {
+            let deck = [];
+            for (let i = 0; i < COPIES_PER_TYPE; i++) {
+                deck = deck.concat(typesArray);
+            }
+            // Fisher-Yates アルゴリズムでシャッフル
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        /**
+         * ゲーム状態を初期化
+         */
+        function resetGame() {
+            // 棒を筒に戻す
+            elLeftStick.classList.remove('drawn');
+            elRightStick.classList.remove('drawn');
+
+            // 0.3秒待ってから文字を消し、状態をリセット（戻るアニメーションを待つ）
+            setTimeout(() => {
+                elLeftResult.textContent = '';
+                elRightResult.textContent = '';
+
+                leftDeck = initializeDeck(KANJI_TYPES);
+                rightDeck = initializeDeck(NUMBER_TYPES);
+
+                updateUI();
+            }, 300);
+        }
+
+        /**
+         * UIの更新（残り本数とボタンの有効化/無効化）
+         */
+        function updateUI() {
+            elLeftCount.textContent = leftDeck.length;
+            elRightCount.textContent = rightDeck.length;
+
+            btnDrawLeft.disabled = leftDeck.length === 0 || isAnimatingLeft;
+            btnDrawRight.disabled = rightDeck.length === 0 || isAnimatingRight;
+
+            // ボタンのテキスト変更
+            btnDrawLeft.textContent = leftDeck.length === 0 ? '空です' : '左から引く';
+            btnDrawRight.textContent = rightDeck.length === 0 ? '空です' : '右から引く';
+        }
+
+        /**
+         * 筒から棒を引く共通処理
+         */
+        function drawStick(side) {
+            const isLeft = side === 'left';
+            const deck = isLeft ? leftDeck : rightDeck;
+            const elStick = isLeft ? elLeftStick : elRightStick;
+            const elResult = isLeft ? elLeftResult : elRightResult;
+            const elWrapper = isLeft ? elLeftWrapper : elRightWrapper;
+
+            if (deck.length === 0) return;
+
+            // アニメーション中フラグを立てる
+            if (isLeft) isAnimatingLeft = true;
+            else isAnimatingRight = true;
+            updateUI(); // ボタンを一旦無効化
+
+            // すでに引かれている場合は、一度引っ込める
+            const isAlreadyDrawn = elStick.classList.contains('drawn');
+            let delayBeforeDraw = 0;
+
+            if (isAlreadyDrawn) {
+                elStick.classList.remove('drawn');
+                delayBeforeDraw = 400; // 引っ込むのを待つ時間
+            }
+
+            // 指定時間後に引き抜くアニメーションを開始
+            setTimeout(() => {
+                // 筒を揺らす
+                elWrapper.classList.add('is-shaking');
+
+                // 結果を決定
+                const drawnValue = deck.pop();
+
+                // 揺れが終わる頃に棒が飛び出す
+                setTimeout(() => {
+                    elWrapper.classList.remove('is-shaking');
+                    elResult.textContent = drawnValue;
+                    elStick.classList.add('drawn');
+
+                    // アニメーション完了後にフラグ解除
+                    setTimeout(() => {
+                        if (isLeft) isAnimatingLeft = false;
+                        else isAnimatingRight = false;
+                        updateUI();
+                    }, 700); // stickのtransition時間と合わせる
+
+                }, 250); // 揺れアニメーションの半ばで棒が出る
+
+            }, delayBeforeDraw);
+        }
+
+        btnDrawLeft.addEventListener('click', () => drawStick('left'));
+        btnDrawRight.addEventListener('click', () => drawStick('right'));
+        btnReset.addEventListener('click', resetGame);
+
+        // 初期化実行
+        window.onload = resetGame;
+
+    </script>
+</body>
+</html>
