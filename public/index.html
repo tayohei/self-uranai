@@ -277,6 +277,10 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   animation:pop .45s cubic-bezier(.2,.9,.3,1.2);
 }
 .limit-msg:focus,.stage:focus{outline:none}
+.limit-close{margin-top:16px}
+.tray.reopenable{cursor:pointer}
+.tray.reopenable:focus-visible{outline:3px solid #c99a2e;outline-offset:2px}
+.tray-hint{align-self:center;padding-top:14px;font-size:12px;letter-spacing:.1em;color:var(--shu)}
 
 @media (max-width:720px){
   .wrap{padding:28px 16px 130px}
@@ -328,6 +332,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   <div class="slot" data-side="kanji"><span class="slot-label">漢字</span><span class="slot-chip">？</span></div>
   <span class="tray-dot" aria-hidden="true">・</span>
   <div class="slot" data-side="num"><span class="slot-label">数字</span><span class="slot-chip">？</span></div>
+  <span class="tray-hint" hidden>結果を見る</span>
 </div>
 
 <!-- 引いた棒の演出 -->
@@ -359,7 +364,10 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
       <button class="btn primary" type="button" id="again">もう一度引く</button>
     </div>
     <div class="limit-msg" id="limit-msg" tabindex="-1" role="status" hidden>
-      うらない棒は1日1回です。<br>今日は出た内容を心に受け止めて、<br>がんばりましょう！
+      うらない棒は1日1回。<br>また明日、お待ちしています。<br>今日は出た内容を心に受け止めて、<br>がんばりましょう！
+    </div>
+    <div class="modal-actions limit-close" id="limit-close" hidden>
+      <button class="btn primary" type="button" id="close-modal">受け止めて閉じる</button>
     </div>
   </div>
 </div>
@@ -615,11 +623,33 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     const n = document.createElement('span'); n.textContent = state.num.drawn;
     out.append(a, d, n);
     returnFocus = document.activeElement;
-    imageBlob = renderImage().catch(() => null);   // シェアはタップ直後でないと拒否される端末があるので先に作る
+    imageBlob = imageBlob || renderImage().catch(() => null);   // シェアはタップ直後でないと拒否される端末があるので先に作る
     setBackgroundInert(true);
     modal.classList.add('open');
-    document.getElementById('again').focus();
+    enableReopen();
+    // 「もう一度引く」を押した後に開き直したときは、閉じるボタンへ
+    (document.getElementById('limit-close').hidden ? document.getElementById('again') : document.getElementById('close-modal')).focus();
   }
+
+  // 閉じたあとも、受け皿をタップすれば結果を見返せる
+  const tray = document.querySelector('.tray');
+  function enableReopen() {
+    if (tray.classList.contains('reopenable')) return;
+    tray.classList.add('reopenable');
+    tray.setAttribute('role', 'button');
+    tray.setAttribute('tabindex', '0');
+    tray.setAttribute('aria-label', '結果をもう一度見る');
+    tray.querySelector('.tray-hint').hidden = false;
+  }
+  tray.addEventListener('click', () => {
+    if (tray.classList.contains('reopenable') && !modal.classList.contains('open')) openModal();
+  });
+  tray.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && tray.classList.contains('reopenable') && !modal.classList.contains('open')) {
+      e.preventDefault();
+      openModal();
+    }
+  });
 
   function closeModal() {
     modal.classList.remove('open');
@@ -782,8 +812,10 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     e.currentTarget.closest('.modal-actions').hidden = true;
     const msg = document.getElementById('limit-msg');
     msg.hidden = false;
+    document.getElementById('limit-close').hidden = false;
     msg.focus();
   });
+  document.getElementById('close-modal').addEventListener('click', closeModal);
 })();
 </script>
 </body>
