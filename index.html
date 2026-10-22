@@ -28,15 +28,18 @@
 *,*::before,*::after{box-sizing:inherit}
 html,body{margin:0}
 body{
-  min-height:100vh;
+  min-height:100vh;min-height:100dvh;
   color:var(--ink);
   font-family:var(--mincho);
   background-color:var(--wall);
+}
+/* 壁の質感。background-attachment:fixed は重くなりがちなので、固定した擬似要素に描く */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background-image:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25 0 0 0 0 .2 0 0 0 0 .14 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .22 0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>"),
     radial-gradient(ellipse at 50% 20%, #b9ab93 0%, var(--wall) 55%, var(--wall-dark) 100%);
-  background-attachment:fixed;
 }
 .wrap{max-width:1040px;margin:0 auto;padding:40px 20px 140px}
 
