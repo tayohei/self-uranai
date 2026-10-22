@@ -34,15 +34,18 @@ html,body{margin:0}
 body{
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
-  min-height:100vh;
+  min-height:100vh;min-height:100dvh;
   color:var(--ink);
   font-family:var(--mincho);
   background-color:var(--wall);
+}
+/* 壁の質感。background-attachment:fixed は重くなりがちなので、固定した擬似要素に描く */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background-image:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25 0 0 0 0 .2 0 0 0 0 .14 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .22 0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>"),
     radial-gradient(ellipse at 50% 20%, #b9ab93 0%, var(--wall) 55%, var(--wall-dark) 100%);
-  background-attachment:fixed;
 }
 .wrap{max-width:1040px;margin:0 auto;padding:40px 20px 140px}
 
@@ -132,8 +135,9 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   box-shadow:0 3px 0 #6e2118,0 6px 10px rgba(20,8,4,.5);
   transition:transform .1s, box-shadow .1s;
 }
-.shake-btn:active{transform:translateY(3px);box-shadow:0 0 0 #6e2118,0 2px 4px rgba(20,8,4,.4)}
+.shake-btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 0 0 #6e2118,0 2px 4px rgba(20,8,4,.4)}
 .shake-btn:focus-visible{outline:3px solid #fff4c9;outline-offset:3px}
+.shake-btn:disabled{opacity:.45;cursor:default}
 
 .stick{
   --dy:0px;--tx:0px;--r:0;--lift:0;
@@ -154,11 +158,11 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     linear-gradient(to bottom, transparent 0 34%, rgba(90,66,20,.55) 34% 35.2%, transparent 35.2% 100%),
     var(--bamboo-v);
 }
-.stick:hover,.stick:focus-visible{--dy:-14px;z-index:150 !important}
+.stick:not(:disabled):hover,.stick:not(:disabled):focus-visible{--dy:-14px;z-index:150 !important}
+.stick:disabled{cursor:default}
 .stick:focus-visible{outline:3px solid #fff4c9;outline-offset:2px}
 .stick.pulling{--dy:-380px;opacity:0;pointer-events:none;z-index:300 !important}
 .stick.gone{visibility:hidden}
-.side.done .stick:not(.pulling){cursor:default}
 .side.animating .stick{transition:opacity .5s}
 
 /* ---------- 引いた棒を見せる演出 ---------- */
@@ -375,6 +379,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   const DEG = Math.PI / 180;
 
   const state = {};
+  let busy = false;   // 演出・振り中は全体で1操作だけ（キーボードで両方の箱を同時に操作させない）
   const modal = document.getElementById('modal');
   const reveal = document.getElementById('reveal');
   let revealSkip = null;
@@ -399,7 +404,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
       sim.push({ x:50, r:0, l:0, vx:0, vr:0, vl:0, tx:50, tr:0, tl:0, amp:0, phase:0 });
     }
     state[side] = { root, area, sticksEl, chars, buttons, sim, width: area.clientWidth,
-                    drawn: null, busy: false };
+                    drawn: null };
     shuffle(chars);
     setTargets(side);
     reorderZ(side);
@@ -440,19 +445,28 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
 
   async function draw(side, i) {
     const s = state[side];
-    if (s.drawn !== null || s.busy) return;
-    s.busy = true;
+    if (s.drawn !== null || busy) return;
+    busy = true;
     const b = s.buttons[i];
     const ch = s.chars[i];
     s.drawn = ch;
     s.root.classList.add('done');
+    s.buttons.forEach(x => { x.disabled = true; });
+    s.root.querySelector('.shake-btn').disabled = true;
     b.classList.add('pulling');
 
-    await wait(reduceMotion ? 0 : 380);
-    b.classList.add('gone');
-    await showReveal(side, ch);   // 画面中央で棒を見せ、受け皿へ送る
-    fillSlot(side, ch);
-    s.busy = false;
+    try {
+      await wait(reduceMotion ? 0 : 380);
+      b.classList.add('gone');
+      await showReveal(side, ch);   // 画面中央で棒を見せ、受け皿へ送る
+    } catch (err) {
+      console.error(err);
+    } finally {
+      // 演出で何かあっても、結果の反映とロック解除は必ず行う
+      reveal.classList.remove('open', 'leaving');
+      fillSlot(side, ch);
+      busy = false;
+    }
 
     const other = side === 'kanji' ? 'num' : 'kanji';
     if (state[other].drawn !== null) {
@@ -467,37 +481,34 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     }
   }
 
-  function showReveal(side, ch) {
-    return new Promise(async resolve => {
-      const inner = reveal.querySelector('.reveal-inner');
-      const stick = reveal.querySelector('.reveal-stick');
-      stick.className = 'reveal-stick' + (side === 'num' ? ' num' : '');
-      stick.querySelector('.char').textContent = ch;
-      reveal.querySelector('.reveal-caption').textContent = NAMES[side] + 'の棒';
-      inner.style.transform = ''; inner.style.opacity = '';
-      reveal.classList.remove('leaving');
-      // アニメーションを毎回最初から
-      inner.style.animation = 'none'; void inner.offsetWidth; inner.style.animation = '';
-      reveal.classList.add('open');
+  async function showReveal(side, ch) {
+    const inner = reveal.querySelector('.reveal-inner');
+    const stick = reveal.querySelector('.reveal-stick');
+    stick.className = 'reveal-stick' + (side === 'num' ? ' num' : '');
+    stick.querySelector('.char').textContent = ch;
+    reveal.querySelector('.reveal-caption').textContent = NAMES[side] + 'の棒';
+    inner.style.transform = ''; inner.style.opacity = '';
+    reveal.classList.remove('leaving');
+    // アニメーションを毎回最初から
+    inner.style.animation = 'none'; void inner.offsetWidth; inner.style.animation = '';
+    reveal.classList.add('open');
 
-      // 見せる時間（タップで早送り）
-      await Promise.race([wait(reduceMotion ? 900 : 1500), new Promise(r => { revealSkip = r; })]);
-      revealSkip = null;
+    // 見せる時間（タップで早送り）
+    await Promise.race([wait(reduceMotion ? 900 : 1500), new Promise(r => { revealSkip = r; })]);
+    revealSkip = null;
 
-      if (!reduceMotion) {
-        // 受け皿のスロットへ吸い込まれるように移動
-        const slot = document.querySelector(`.slot[data-side="${side}"] .slot-chip`).getBoundingClientRect();
-        const box = inner.getBoundingClientRect();
-        const dx = (slot.left + slot.width / 2) - (box.left + box.width / 2);
-        const dy = (slot.top + slot.height / 2) - (box.top + box.height / 2);
-        reveal.classList.add('leaving');
-        inner.style.transform = `translate(${dx}px, ${dy}px) scale(.15)`;
-        inner.style.opacity = '.2';
-        await wait(550);
-      }
-      reveal.classList.remove('open', 'leaving');
-      resolve();
-    });
+    if (!reduceMotion) {
+      // 受け皿のスロットへ吸い込まれるように移動
+      const slot = document.querySelector(`.slot[data-side="${side}"] .slot-chip`).getBoundingClientRect();
+      const box = inner.getBoundingClientRect();
+      const dx = (slot.left + slot.width / 2) - (box.left + box.width / 2);
+      const dy = (slot.top + slot.height / 2) - (box.top + box.height / 2);
+      reveal.classList.add('leaving');
+      inner.style.transform = `translate(${dx}px, ${dy}px) scale(.15)`;
+      inner.style.opacity = '.2';
+      await wait(550);
+    }
+    reveal.classList.remove('open', 'leaving');
   }
   reveal.addEventListener('click', () => { if (revealSkip) revealSkip(); });
 
@@ -510,8 +521,8 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   /* ---------- 振る：ばね＋減衰振動で毎フレーム動かす ---------- */
   function shake(side) {
     const s = state[side];
-    if (s.busy) return;
-    s.busy = true;
+    if (busy || s.drawn !== null) return;
+    busy = true;
     // 引いた棒は箱に戻さない（連続で引き直せないように）
     shuffle(s.chars);
     s.width = s.area.clientWidth;
@@ -520,7 +531,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
       setTargets(side); reorderZ(side);
       s.sim.forEach(p => { p.x = p.tx; p.r = p.tr; p.l = p.tl; });
       render(side, 0, 0);
-      s.busy = false;
+      busy = false;
       return;
     }
 
@@ -564,7 +575,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
         render(side, 0, 0);
         s.area.style.transform = '';
         s.root.classList.remove('animating');
-        s.busy = false;
+        busy = false;
       }
     }
     requestAnimationFrame(frame);
