@@ -263,8 +263,16 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
 .btn.primary{background:var(--shu);border-color:var(--shu);color:#fff8ec}
 .btn:focus-visible{outline:3px solid #c99a2e;outline-offset:2px}
 [hidden]{display:none !important}
-.share-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
-.share-actions .btn{font-size:14px;padding:8px 14px}
+.share-actions{display:flex;gap:14px;justify-content:center;margin-top:16px}
+.icon-btn{
+  width:44px;height:44px;padding:0;border-radius:50%;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #6a5a48;background:transparent;color:var(--ink);
+  transition:background .15s;
+}
+.icon-btn:hover{background:rgba(90,58,36,.1)}
+.icon-btn:focus-visible{outline:3px solid #c99a2e;outline-offset:2px}
+.icon-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .share-status{min-height:1.7em;margin-top:8px;font-size:13px;color:#5b4d3e}
 .limit-msg{
   margin:4px auto 0;padding:16px 12px;
@@ -344,9 +352,15 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
       <button class="btn primary" type="button" id="again">もう一度引く</button>
     </div>
     <div class="share-actions">
-      <button class="btn" type="button" id="save-img">画像を保存</button>
-      <button class="btn" type="button" id="copy-text">コピー</button>
-      <button class="btn" type="button" id="share" hidden>シェア</button>
+      <button class="icon-btn" type="button" id="save-img" aria-label="画像を保存" title="画像を保存">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19.5h14"/></svg>
+      </button>
+      <button class="icon-btn" type="button" id="copy-text" aria-label="結果をコピー" title="結果をコピー">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+      <button class="icon-btn" type="button" id="share" aria-label="シェア" title="シェア" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8 15.8 6.7M8.2 13.2l7.6 4.1"/></svg>
+      </button>
     </div>
     <div class="share-status" id="share-status" role="status" aria-live="polite"></div>
     <div class="limit-msg" id="limit-msg" tabindex="-1" role="status" hidden>
