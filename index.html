@@ -260,7 +260,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   font-family:var(--brush);font-size:clamp(14px,4vw,19px);line-height:1.75;color:#5a1f16;
   animation:pop .45s cubic-bezier(.2,.9,.3,1.2);
 }
-.limit-msg:focus{outline:none}
+.limit-msg:focus,.stage:focus{outline:none}
 
 @media (max-width:720px){
   .wrap{padding:28px 16px 130px}
@@ -288,7 +288,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     <p class="note">* 前向きに良い方向に解釈して下さい。</p>
   </section>
 
-  <main class="stage">
+  <main class="stage" tabindex="-1">
     <div class="side" id="side-kanji">
       <div class="box-area">
         <div class="box-back"></div>
@@ -382,7 +382,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'stick' + (side === 'num' ? ' num' : '');
-      b.setAttribute('aria-label', NAMES[side] + 'の棒');
+      b.setAttribute('aria-label', `${NAMES[side]}の棒 ${i + 1}/${COUNT}`);
       b.addEventListener('click', () => draw(side, i));
       sticksEl.appendChild(b);
       buttons.push(b);
@@ -450,6 +450,8 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
       await wait(500);
       openModal();
     } else {
+      // 引いた棒は消えるのでフォーカスが迷子になる。次の箱の最初の棒へ移す
+      state[other].buttons[0].focus({ preventScroll: true });
       // スマホで次の箱が画面外なら、そこまでスクロール
       const r = state[other].area.getBoundingClientRect();
       if (r.top < 0 || r.bottom > window.innerHeight - 90) {
@@ -575,6 +577,11 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     requestAnimationFrame(frame);
   }
 
+  // モーダル表示中は背景を inert にして、フォーカスもスクリーンリーダーも背景へ出さない
+  const setBackgroundInert = on =>
+    document.querySelectorAll('.wrap, .tray').forEach(el => { el.inert = on; });
+  let returnFocus = null;
+
   function openModal() {
     const out = document.getElementById('modal-result');
     out.innerHTML = '';
@@ -582,9 +589,25 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     const d = document.createElement('span'); d.className = 'dot'; d.textContent = '・';
     const n = document.createElement('span'); n.textContent = state.num.drawn;
     out.append(a, d, n);
+    returnFocus = document.activeElement;
+    setBackgroundInert(true);
     modal.classList.add('open');
     document.getElementById('again').focus();
   }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    setBackgroundInert(false);
+    // 開く前のフォーカス位置に戻す。引いた棒は無効・非表示なので、戻れなければ棒の置き場へ
+    const usable = returnFocus && returnFocus !== document.body && returnFocus.isConnected &&
+      !returnFocus.disabled && getComputedStyle(returnFocus).visibility !== 'hidden';
+    (usable ? returnFocus : document.querySelector('.stage')).focus({ preventScroll: true });
+    returnFocus = null;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
 
   buildSide('kanji');
   buildSide('num');
