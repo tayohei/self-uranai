@@ -67,15 +67,9 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .38 0 0 0 .12 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
     linear-gradient(170deg,#fffefa 0%,#f6f3ea 100%);
   transform:rotate(-.6deg);
-  box-shadow:0 1px 1px rgba(40,28,15,.18),0 3px 6px rgba(40,28,15,.14),0 18px 28px -14px rgba(40,28,15,.5);
+  box-shadow:0 1px 1px rgba(40,28,15,.18),0 3px 6px rgba(40,28,15,.14),0 20px 30px -14px rgba(40,28,15,.55);
   font-size:16px;line-height:1.95;
 }
-.notice::before,.notice::after{
-  content:"";position:absolute;bottom:14px;width:46%;height:20px;z-index:-1;
-  box-shadow:0 16px 14px rgba(40,28,15,.45);
-}
-.notice::before{left:12px;transform:rotate(-3deg)}
-.notice::after{right:12px;transform:rotate(3deg)}
 .tape{
   position:absolute;top:-12px;width:92px;height:28px;
   background:rgba(236,226,196,.72);box-shadow:0 1px 2px rgba(0,0,0,.12);
