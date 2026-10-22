@@ -250,8 +250,9 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
 @keyframes pop{from{transform:translateY(24px) scale(.94);opacity:0}to{transform:none;opacity:1}}
 .modal-card h2{margin:0 0 6px;font-size:15px;font-weight:400;letter-spacing:.3em;color:#5b4d3e}
 .modal-result{
-  font-family:var(--brush);font-size:clamp(72px,22vw,128px);line-height:1.15;
+  font-family:var(--brush);font-size:clamp(56px,18vw,104px);line-height:1.15;
   color:#1c140c;margin:6px 0 10px;letter-spacing:.04em;
+  white-space:nowrap;   /* 「漢字・数字」は必ず1行に収める */
 }
 .modal-result .dot{color:var(--shu)}
 .modal-card p{margin:0 0 24px;font-size:15px;line-height:1.8}
