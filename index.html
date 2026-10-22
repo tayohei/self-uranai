@@ -1,538 +1,617 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>セルフ占い棒 導きの竹棒</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Shippori Mincho -->
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>セルフうらない棒 ～導きの竹棒～</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Old+Mincho:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#a89a83;
+  --wall-dark:#8d7f69;
+  --paper:#fbfaf6;
+  --ink:#2a241d;
+  --wood:#5a3a24;
+  --shu:#a83a2c;
+  --stick-black:#1e1b17;
+  --bamboo-v:linear-gradient(90deg,#9b7c35 0%,#d8c27c 30%,#efe1ae 48%,#d3ba6c 72%,#957632 100%);
+  --bamboo-h:linear-gradient(180deg,#9b7c35 0%,#d8c27c 30%,#efe1ae 48%,#d3ba6c 72%,#957632 100%);
+  --brush:"Yuji Syuku","Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --mincho:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --paper-fiber:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.03 .55' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55 0 0 0 0 .5 0 0 0 0 .42 0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{
+  min-height:100vh;
+  color:var(--ink);
+  font-family:var(--mincho);
+  background-color:var(--wall);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25 0 0 0 0 .2 0 0 0 0 .14 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .22 0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>"),
+    radial-gradient(ellipse at 50% 20%, #b9ab93 0%, var(--wall) 55%, var(--wall-dark) 100%);
+  background-attachment:fixed;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:40px 20px 140px}
 
-    <style>
-        :root {
-            --washi-bg: #f5f0e6;
-            --wood-dark: #2b1d0e;
-            --wood-medium: #4a3520;
-            --wood-light: #7b5b3a;
-            --bamboo-base: #e3cb98;
-            --bamboo-light: #f5e6c4;
-            --bamboo-dark: #c5a365;
-            --paper-bg: #fdfcf7;
-        }
+/* ---------- タイトル ---------- */
+h1{
+  margin:0 0 28px;text-align:center;
+  font-family:var(--brush);font-weight:400;line-height:1.2;color:#2b2219;
+  text-shadow:0 1px 0 rgba(255,255,255,.25);
+}
+h1 .main{display:block;font-size:clamp(34px,6.4vw,58px);letter-spacing:.08em}
+h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margin-top:6px;color:#4a3a2a}
 
-        body {
-            font-family: 'Shippori Mincho', serif;
-            /* 背景を明るい色合い（生成り色・和紙風）に設定 */
-            background-color: #faf6eb;
-            background-image:
-                radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
-                radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
-            background-size: 20px 20px, 15px 15px;
-            background-position: 0 0, 10px 10px;
-            color: var(--wood-dark);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
+/* ---------- 壁に貼った説明紙 ---------- */
+.notice{
+  position:relative;max-width:620px;margin:0 auto 48px;padding:34px 38px 30px;
+  background-color:var(--paper);
+  background-image:
+    var(--paper-fiber),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .38 0 0 0 .12 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
+    linear-gradient(170deg,#fffefa 0%,#f6f3ea 100%);
+  transform:rotate(-.6deg);
+  box-shadow:0 1px 1px rgba(40,28,15,.18),0 3px 6px rgba(40,28,15,.14),0 18px 28px -14px rgba(40,28,15,.5);
+  font-size:16px;line-height:1.95;
+}
+.notice::before,.notice::after{
+  content:"";position:absolute;bottom:14px;width:46%;height:20px;z-index:-1;
+  box-shadow:0 16px 14px rgba(40,28,15,.45);
+}
+.notice::before{left:12px;transform:rotate(-3deg)}
+.notice::after{right:12px;transform:rotate(3deg)}
+.tape{
+  position:absolute;top:-12px;width:92px;height:28px;
+  background:rgba(236,226,196,.72);box-shadow:0 1px 2px rgba(0,0,0,.12);
+}
+.tape.l{left:-18px;transform:rotate(-32deg)}
+.tape.r{right:-18px;transform:rotate(30deg)}
+.notice p{margin:0 0 .9em}
+.notice ol{margin:0 0 1em;padding:0;list-style:none}
+.notice li{margin:.2em 0}
+.notice .note{font-size:14.5px;margin:0;color:#4b4136}
+.notice .note + .note{margin-top:.2em}
 
-        .paper-note {
-            position: relative;
-            background-color: var(--paper-bg);
-            /* ノイズテクスチャで紙の質感を表現 */
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
-            border-radius: 2px;
-            box-shadow:
-                2px 6px 15px rgba(0, 0, 0, 0.15),
-                inset 0 0 20px rgba(0,0,0,0.03);
-            transform: rotate(-1deg);
-            padding: 2rem 1.5rem;
-            max-width: 600px;
-            margin: 2rem auto;
-            z-index: 10;
-        }
+/* ---------- 箱と棒 ---------- */
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:44px;max-width:880px;margin:0 auto}
+.side{display:flex;flex-direction:column;align-items:center}
+.box-area{
+  position:relative;width:100%;max-width:380px;height:360px;
+  transform-origin:50% 100%;will-change:transform;
+}
+.box-back{
+  position:absolute;left:4%;right:4%;bottom:150px;height:22px;
+  background:linear-gradient(#1a0f08,#2f1c10);border-radius:3px 3px 0 0;
+}
+/* 棒の置き場。箱の縁より下は「箱の口の幅」だけ見せる → 棒が箱の外から生えて見えない */
+.sticks{
+  position:absolute;inset:0;
+  clip-path:polygon(
+    -300px -600px, calc(100% + 300px) -600px,
+    calc(100% + 300px) calc(100% - 166px), 95% calc(100% - 166px),
+    95% calc(100% - 12px), 5% calc(100% - 12px),
+    5% calc(100% - 166px), -300px calc(100% - 166px));
+}
+.box-front{
+  position:absolute;left:0;right:0;bottom:0;height:160px;z-index:200;
+  border-radius:4px 4px 6px 6px;
+  background-color:var(--wood);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='160'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='.006 .25' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .12 0 0 0 0 .06 0 0 0 0 .02 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23w)'/></svg>"),
+    linear-gradient(180deg,#7a5134 0%,var(--wood) 14%,#4c301d 100%);
+  background-size:100% 100%,100% 100%;
+  box-shadow:inset 0 3px 0 rgba(255,220,180,.18),inset 0 -6px 12px rgba(0,0,0,.35),0 14px 22px -8px rgba(30,18,8,.7);
+  pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.box-front::before{
+  content:"";position:absolute;left:-6px;right:-6px;top:-8px;height:14px;border-radius:3px;
+  background:linear-gradient(#83593a,#4a2e1b);box-shadow:0 3px 4px rgba(0,0,0,.35);
+}
 
-        /* 紙を止めるマスキングテープ風装飾 */
-        .paper-note::before {
-            content: '';
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%) rotate(2deg);
-            width: 100px;
-            height: 25px;
-            background-color: rgba(230, 225, 210, 0.85);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-radius: 1px;
-            z-index: 11;
-        }
+/* 振るボタン（箱の正面） */
+.shake-btn{
+  pointer-events:auto;
+  font-family:var(--brush);font-size:21px;letter-spacing:.3em;
+  padding:10px 24px 10px 30px;margin-top:6px;
+  color:#fff8ec;background:var(--shu);
+  border:0;border-radius:3px;cursor:pointer;
+  box-shadow:0 3px 0 #6e2118,0 6px 10px rgba(20,8,4,.5);
+  transition:transform .1s, box-shadow .1s;
+}
+.shake-btn:active{transform:translateY(3px);box-shadow:0 0 0 #6e2118,0 2px 4px rgba(20,8,4,.4)}
+.shake-btn:focus-visible{outline:3px solid #fff4c9;outline-offset:3px}
 
-        .omikuji-box-container {
-            position: relative;
-            width: 100%;
-            max-width: 320px;
-            height: 320px;
-            margin: 0 auto;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-        }
+.stick{
+  --dy:0px;--tx:0px;--r:0;--lift:0;
+  position:absolute;left:0;bottom:-30px;
+  width:14px;height:314px;padding:0;border:0;cursor:pointer;
+  border-radius:4px 4px 2px 2px;
+  transform-origin:50% 100%;will-change:transform;
+  transform:translate3d(var(--tx), calc(var(--lift) * -1px), 0) rotate(calc(var(--r) * 1deg)) translateY(var(--dy));
+  transition:transform .45s cubic-bezier(.3,.7,.3,1), opacity .5s;
+  background:
+    linear-gradient(to bottom, transparent 0 34%, rgba(90,66,20,.55) 34% 35.2%, transparent 35.2% 100%),
+    var(--bamboo-v);
+  box-shadow:1px 0 2px rgba(30,18,6,.45),-1px 0 1px rgba(30,18,6,.2);
+}
+.stick.num{
+  background:
+    linear-gradient(to bottom, var(--stick-black) 0 25%, transparent 25% 100%),
+    linear-gradient(to bottom, transparent 0 34%, rgba(90,66,20,.55) 34% 35.2%, transparent 35.2% 100%),
+    var(--bamboo-v);
+}
+.stick:hover,.stick:focus-visible{--dy:-14px;z-index:150 !important}
+.stick:focus-visible{outline:3px solid #fff4c9;outline-offset:2px}
+.stick.pulling{--dy:-380px;opacity:0;pointer-events:none;z-index:300 !important}
+.stick.gone{visibility:hidden}
+.side.done .stick:not(.pulling){cursor:default}
+.side.animating .stick{transition:opacity .5s}
 
-        /* 箱の奥の壁 */
-        .box-back {
-            position: absolute;
-            bottom: 0;
-            width: 85%;
-            height: 180px;
-            background: linear-gradient(to bottom, #2b1d0e, #110b05);
-            border-radius: 8px 8px 0 0;
-            z-index: 0;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
-        }
+/* ---------- 引いた棒を見せる演出 ---------- */
+.reveal{
+  position:fixed;inset:0;z-index:900;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(30,22,14,.55);cursor:pointer;
+  transition:background .5s;
+}
+.reveal.open{display:flex}
+.reveal.leaving{background:rgba(30,22,14,0)}
+.reveal-inner{
+  display:flex;flex-direction:column;align-items:center;gap:18px;
+  animation:rise .7s cubic-bezier(.15,.85,.3,1.05);
+  transition:transform .55s cubic-bezier(.5,0,.75,0), opacity .55s;
+}
+@keyframes rise{
+  from{transform:translateY(55vh) rotate(-8deg);opacity:0}
+  60%{opacity:1}
+  to{transform:none}
+}
+.reveal-stick{
+  position:relative;width:76px;height:min(340px,52vh);
+  border-radius:6px;background:var(--bamboo-v);
+  box-shadow:0 18px 30px rgba(0,0,0,.5);
+  display:flex;justify-content:center;padding-top:16px;
+}
+.reveal-stick.num::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:25%;
+  background:var(--stick-black);border-radius:0 0 6px 6px;
+}
+.reveal-stick .char{font-family:var(--brush);font-size:58px;line-height:1;color:#1c140c}
+.reveal-caption{
+  font-family:var(--brush);font-size:22px;letter-spacing:.15em;color:#fff8ec;
+  text-shadow:0 2px 6px rgba(0,0,0,.6);
+}
 
-        /* 棒を並べるラッパー */
-        .sticks-wrapper {
-            position: absolute;
-            bottom: 0;
-            width: 80%;
-            height: 300px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            z-index: 1;
-            padding-bottom: 5px;
-        }
+/* ---------- 画面下の受け皿（常に見える） ---------- */
+.tray{
+  position:fixed;left:50%;z-index:800;
+  bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%);
+  display:flex;align-items:center;gap:10px;
+  padding:8px 20px 10px;
+  background-color:var(--paper);background-image:var(--paper-fiber);
+  border-top:4px solid var(--shu);border-radius:2px;
+  box-shadow:0 10px 24px rgba(30,18,8,.45);
+}
+.slot{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:58px}
+.slot-label{font-size:12px;letter-spacing:.2em;color:#5b4d3e}
+.slot-chip{
+  position:relative;width:52px;height:52px;border-radius:4px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:#e9e3d3;border:1px dashed #b3a58c;
+  font-family:var(--brush);font-size:30px;color:#b3a58c;
+}
+.slot.filled .slot-chip{
+  border:0;background:var(--bamboo-h);color:#1c140c;
+  box-shadow:0 2px 4px rgba(30,18,6,.35);
+  animation:chip .45s cubic-bezier(.2,.9,.3,1.4);
+}
+.slot.filled[data-side="num"] .slot-chip{padding-right:12px}
+.slot.filled[data-side="num"] .slot-chip::after{
+  content:"";position:absolute;top:0;bottom:0;right:0;width:25%;background:var(--stick-black);
+}
+@keyframes chip{from{transform:scale(.4)}to{transform:none}}
+.tray-dot{font-family:var(--brush);font-size:28px;color:var(--shu);padding-top:14px}
 
-        /* 竹棒 1本 */
-        .stick {
-            position: absolute;
-            width: 12px;
-            height: 280px;
-            background: linear-gradient(to right, var(--bamboo-dark) 0%, var(--bamboo-light) 40%, var(--bamboo-base) 100%);
-            border-radius: 6px 6px 0 0;
-            cursor: pointer;
-            /* JSで計算したカスタムプロパティを使用してランダムに配置 */
-            transform-origin: bottom center;
-            transform: translate(var(--base-x, 0), var(--base-y, 0)) rotate(var(--base-angle, 0));
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s, z-index 0s;
-            z-index: var(--base-z, 1);
-            box-shadow: inset -1px 0 3px rgba(0,0,0,0.3), inset 1px 0 2px rgba(255,255,255,0.4), -2px 0 4px rgba(0,0,0,0.2);
-            border-top: 2px solid #8b6b42;
-        }
+/* ---------- モーダル ---------- */
+.modal{
+  position:fixed;inset:0;z-index:1000;
+  display:none;align-items:center;justify-content:center;padding:20px;
+  background:rgba(30,22,14,.62);
+}
+.modal.open{display:flex;animation:fade .3s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal-card{
+  position:relative;width:min(440px,100%);
+  padding:40px 28px 30px;text-align:center;
+  background-color:var(--paper);background-image:var(--paper-fiber);
+  box-shadow:0 24px 50px rgba(0,0,0,.5);
+  border-top:6px solid var(--shu);
+  animation:pop .5s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes pop{from{transform:translateY(24px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+.modal-card h2{margin:0 0 6px;font-size:15px;font-weight:400;letter-spacing:.3em;color:#5b4d3e}
+.modal-result{
+  font-family:var(--brush);font-size:clamp(72px,22vw,128px);line-height:1.15;
+  color:#1c140c;margin:6px 0 10px;letter-spacing:.04em;
+}
+.modal-result .dot{color:var(--shu)}
+.modal-card p{margin:0 0 24px;font-size:15px;line-height:1.8}
+.modal-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{
+  font-family:var(--mincho);font-size:15px;padding:11px 20px;border-radius:3px;cursor:pointer;
+  border:1px solid #6a5a48;background:transparent;color:var(--ink);
+}
+.btn.primary{background:var(--shu);border-color:var(--shu);color:#fff8ec}
+.btn:focus-visible{outline:3px solid #c99a2e;outline-offset:2px}
+[hidden]{display:none !important}
+.limit-msg{
+  margin:4px auto 0;padding:16px 12px;
+  border:1px solid rgba(168,58,44,.45);border-radius:3px;
+  background:rgba(168,58,44,.06);
+  font-family:var(--brush);font-size:clamp(14px,4vw,19px);line-height:1.75;color:#5a1f16;
+  animation:pop .45s cubic-bezier(.2,.9,.3,1.2);
+}
+.limit-msg:focus{outline:none}
 
-        /* 右側の棒（数字）用：先端1/4を黒にするスタイル */
-        .stick.black-top {
-            background:
-                linear-gradient(to bottom, #1f1f1f 0%, #1f1f1f 25%, transparent 25%), /* 黒い部分 */
-                linear-gradient(to right, var(--bamboo-dark) 0%, var(--bamboo-light) 40%, var(--bamboo-base) 100%); /* 竹のベース */
-            border-top: 2px solid #000;
-        }
-
-        /* 棒のホバー効果（隠れた棒も手前に浮かび上がる） */
-        .sticks-wrapper.active .stick:not(.pulled):hover {
-            transform: translate(var(--base-x, 0), calc(var(--base-y, 0) - 40px)) rotate(var(--base-angle, 0)) scale(1.1);
-            z-index: 50 !important;
-            filter: brightness(1.1) drop-shadow(0 10px 10px rgba(0,0,0,0.3));
-        }
-
-        /* 引かれた状態の棒 */
-        .stick.pulled {
-            transform: translate(0, -140px) rotate(0deg) !important;
-            z-index: 100 !important;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4), inset -1px 0 3px rgba(0,0,0,0.3);
-            cursor: default;
-        }
-
-        /* 引かれなかった残りの棒（暗くする） */
-        .sticks-wrapper.disabled .stick:not(.pulled) {
-            filter: brightness(0.7);
-            cursor: default;
-            pointer-events: none;
-        }
-
-        @keyframes shake-box {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-3px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .shaking {
-            animation: shake-box 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
-        /* 棒の文字 */
-        .stick-text {
-            position: absolute;
-            bottom: 40px; /* 箱の下部に隠れる位置 */
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--wood-dark);
-            text-shadow: 1px 1px 0px rgba(255,255,255,0.7);
-            width: 100%;
-            text-align: center;
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            letter-spacing: 2px;
-        }
-
-        /* 箱の手前カバー */
-        .box-front {
-            position: absolute;
-            bottom: 0;
-            width: 92%;
-            height: 120px;
-            background: linear-gradient(to bottom, var(--wood-medium), var(--wood-dark));
-            border-radius: 4px 4px 12px 12px;
-            z-index: 10;
-            box-shadow:
-                inset 0 4px 6px rgba(255,255,255,0.1),
-                0 -4px 10px rgba(0,0,0,0.3),
-                0 10px 20px rgba(0,0,0,0.2);
-            border-top: 4px solid #24180e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .box-label {
-            color: var(--bamboo-light);
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: 0.3em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
-            border: 2px solid rgba(227, 203, 152, 0.4);
-            padding: 10px 20px;
-            border-radius: 6px;
-            background: rgba(0,0,0,0.3);
-            margin-left: 0.3em;
-        }
-
-        /* モーダル */
-        #result-modal {
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-            backdrop-filter: blur(5px);
-        }
-        #result-modal.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .result-text {
-            /* clamp関数を使用して画面幅に応じて文字サイズを可変させ、はみ出しを防ぐ */
-            font-size: clamp(3rem, 15vw, 6rem);
-            font-weight: 800;
-            color: #fff;
-            text-shadow:
-                0 0 15px rgba(227, 203, 152, 0.9),
-                0 0 30px rgba(227, 203, 152, 0.6);
-            letter-spacing: 0.05em;
-            line-height: 1.2;
-            white-space: nowrap; /* 改行を防ぐ */
-        }
-
-        /* ボタン */
-        .btn-traditional {
-            background-color: var(--bamboo-base);
-            color: var(--wood-dark);
-            border: 2px solid var(--wood-medium);
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-traditional::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(255,255,255,0.3), rgba(0,0,0,0.05));
-            pointer-events: none;
-        }
-        .btn-traditional:hover:not(:disabled) {
-            background-color: var(--bamboo-light);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-        }
-        .btn-traditional:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-    </style>
+@media (max-width:720px){
+  .wrap{padding:28px 16px 130px}
+  .notice{padding:28px 22px 24px;font-size:15px}
+  .stage{grid-template-columns:1fr;gap:56px}
+}
+@media (prefers-reduced-motion:reduce){
+  .stick,.reveal-inner,.slot-chip,.modal.open,.modal-card{transition:none !important;animation:none !important}
+}
+</style>
 </head>
-<body class="p-4 sm:p-6">
+<body>
+<div class="wrap">
+  <h1><span class="main">セルフうらない棒</span><span class="sub">～導きの竹棒～</span></h1>
 
-    <header class="w-full px-2">
-        <div class="paper-note">
-            <h1 class="text-2xl md:text-3xl lg:text-4xl font-black mb-6 text-center tracking-widest text-[#2b1d0e] border-b-2 border-gray-300 pb-4 leading-relaxed">
-                セルフ占い棒 導きの竹棒
-            </h1>
+  <section class="notice" aria-label="説明">
+    <span class="tape l" aria-hidden="true"></span>
+    <span class="tape r" aria-hidden="true"></span>
+    <p>右の箱に1～9の数字が各3本×9=27本、<br>左の箱に9種の一文字漢字が各3本×9=27本。</p>
+    <ol>
+      <li>①左右それぞれ1本づつお引きください。</li>
+      <li>②その組み合わせからご自身で占ってみて下さい。</li>
+    </ol>
+    <p class="note">* 他、貴方の想いで色々な引き方(数字から、漢字からなど)は、お気に召すまま、ご自由に!</p>
+    <p class="note">* 前向きに良い方向に解釈して下さい。</p>
+  </section>
 
-            <div class="text-sm md:text-base lg:text-lg leading-relaxed font-medium space-y-4 text-gray-800 px-2 sm:px-6">
-                <p>
-                    左の箱に9種の一文字漢字が各3本×9=27本、<br>
-                    右の箱に1～9の数字が各3本×9=27本。
-                </p>
-
-                <p class="font-bold text-[#4a3520]">
-                    ①左右それぞれ1本づつお引きください。<br>
-                    ②その組み合わせからご自身で占ってみて下さい。
-                </p>
-
-                <p class="text-xs md:text-sm text-gray-600 mt-6 pt-4 border-t border-gray-200">
-                    *他、貴方の想いで色々な引き方(数字から、漢字からなど)は、お気に召すまま、ご自由に!<br><br>
-                    *前向きに良い方向に解釈して下さい。
-                </p>
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-1 w-full max-w-4xl mx-auto flex flex-col md:flex-row justify-center items-center gap-12 md:gap-8 my-8">
-
-        <!-- 左の箱（漢字） -->
-        <section class="flex flex-col items-center w-full md:w-1/2">
-            <h3 class="text-xl md:text-2xl font-bold mb-4 text-[#2b1d0e]">漢字の箱</h3>
-
-            <div id="left-box" class="omikuji-box-container">
-                <div class="box-back"></div>
-                <div id="left-sticks" class="sticks-wrapper active"></div>
-                <div class="box-front">
-                    <span class="box-label">漢字</span>
-                </div>
-            </div>
-
-            <div class="flex flex-col items-center mt-6">
-                <button id="btn-shake-left" class="btn-traditional px-8 py-3 rounded-full font-bold shadow-md text-base md:text-lg mb-3">
-                    箱を振る
-                </button>
-                <p class="text-xs md:text-sm text-[#4a3520] font-bold tracking-wider">好きな棒を1本クリック</p>
-            </div>
-        </section>
-
-        <!-- 右の箱（数字） -->
-        <section class="flex flex-col items-center w-full md:w-1/2">
-            <h3 class="text-xl md:text-2xl font-bold mb-4 text-[#2b1d0e]">数字の箱</h3>
-
-            <div id="right-box" class="omikuji-box-container">
-                <div class="box-back"></div>
-                <div id="right-sticks" class="sticks-wrapper active"></div>
-                <div class="box-front">
-                    <span class="box-label">数字</span>
-                </div>
-            </div>
-
-            <div class="flex flex-col items-center mt-6">
-                <button id="btn-shake-right" class="btn-traditional px-8 py-3 rounded-full font-bold shadow-md text-base md:text-lg mb-3">
-                    箱を振る
-                </button>
-                <p class="text-xs md:text-sm text-[#4a3520] font-bold tracking-wider">好きな棒を1本クリック</p>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- 結果表示モーダル -->
-    <div id="result-modal" class="fixed inset-0 bg-black/85 z-[100] flex flex-col items-center justify-center p-4">
-        <div class="text-center w-full max-w-2xl bg-[#2b1d0e]/70 p-6 md:p-8 rounded-2xl border border-[#c5a365]/50 shadow-2xl backdrop-blur-md">
-            <p class="text-[var(--bamboo-light)] text-lg md:text-2xl font-bold mb-6 md:mb-8 tracking-widest border-b border-[#c5a365]/50 pb-4 inline-block">
-                あなたの導き
-            </p>
-
-            <!-- 結果がここに挿入されます。スマホでも横幅に収まるようCSSのclampを設定済み -->
-            <div id="final-result-text" class="result-text mb-10 md:mb-12 flex justify-center items-center">
-                <!-- JSで 「夢・６」 のように挿入されます -->
-            </div>
-
-            <button id="btn-retry" class="btn-traditional px-8 py-3 md:px-10 md:py-4 rounded-full text-base md:text-xl font-bold shadow-lg w-full max-w-xs">
-                もう一度引く
-            </button>
-        </div>
+  <main class="stage">
+    <div class="side" id="side-kanji">
+      <div class="box-area">
+        <div class="box-back"></div>
+        <div class="sticks" role="group" aria-label="漢字の棒（27本）"></div>
+        <div class="box-front"><button class="shake-btn" type="button" data-side="kanji" aria-label="漢字の箱を振る">振る</button></div>
+      </div>
     </div>
 
-    <script>
-        // データ定義
-        const KANJI_BASE = ['盛', '幸', '開', '成', '試', '業', '愛', '縁', '夢'];
-        const NUMBER_BASE = ['１', '２', '３', '４', '５', '６', '７', '８', '９'];
-        const MULTIPLIER = 3; // 各3本 = 計27本
+    <div class="side" id="side-num">
+      <div class="box-area">
+        <div class="box-back"></div>
+        <div class="sticks" role="group" aria-label="数字の棒（27本）"></div>
+        <div class="box-front"><button class="shake-btn" type="button" data-side="num" aria-label="数字の箱を振る">振る</button></div>
+      </div>
+    </div>
+  </main>
+</div>
 
-        let leftResultValue = null;
-        let rightResultValue = null;
+<!-- 画面下の受け皿 -->
+<div class="tray" aria-live="polite">
+  <div class="slot" data-side="kanji"><span class="slot-label">漢字</span><span class="slot-chip">？</span></div>
+  <span class="tray-dot" aria-hidden="true">・</span>
+  <div class="slot" data-side="num"><span class="slot-label">数字</span><span class="slot-chip">？</span></div>
+</div>
 
-        // DOM要素の取得
-        const elLeftSticks = document.getElementById('left-sticks');
-        const elRightSticks = document.getElementById('right-sticks');
-        const elResultModal = document.getElementById('result-modal');
-        const elFinalResultText = document.getElementById('final-result-text');
-        const btnRetry = document.getElementById('btn-retry');
-        const btnShakeLeft = document.getElementById('btn-shake-left');
-        const btnShakeRight = document.getElementById('btn-shake-right');
+<!-- 引いた棒の演出 -->
+<div class="reveal" id="reveal" aria-hidden="true">
+  <div class="reveal-inner">
+    <div class="reveal-stick"><span class="char"></span></div>
+    <div class="reveal-caption"></div>
+  </div>
+</div>
 
-        // 配列の生成とシャッフル
-        function generateShuffledDeck(baseArray) {
-            let deck = [];
-            for (let i = 0; i < MULTIPLIER; i++) {
-                deck = deck.concat(baseArray);
-            }
-            // Fisher-Yates shuffle
-            for (let i = deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
-            }
-            return deck;
-        }
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <h2 id="modal-title">引いた棒</h2>
+    <div class="modal-result" id="modal-result"></div>
+    <p>この組み合わせから、ご自身の想いで読み解いてみてください。</p>
+    <div class="modal-actions">
+      <button class="btn primary" type="button" id="again">もう一度引く</button>
+    </div>
+    <div class="limit-msg" id="limit-msg" tabindex="-1" role="status" hidden>
+      うらない棒は1日1回です。<br>今日は出た内容を心に受け止めて、<br>がんばりましょう！
+    </div>
+  </div>
+</div>
 
-        // 竹棒の描画
-        function renderSticks(container, deck, side) {
-            container.innerHTML = '';
-            container.classList.add('active');
-            container.classList.remove('disabled');
+<script>
+(() => {
+  const SETS = {
+    kanji: ['盛','幸','開','成','試','業','愛','縁','夢'],
+    num:   ['１','２','３','４','５','６','７','８','９']
+  };
+  const NAMES = { kanji: '漢字', num: '数字' };
+  const COUNT = 27;
+  const STICK_W = 14;
+  const RIM_Y = 166;      // 箱の縁の高さ（箱の底からpx）
+  const PIVOT_Y = -30;    // 棒の根元の高さ（lift=0のとき）
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            deck.forEach((value, index) => {
-                const stick = document.createElement('div');
-                stick.className = 'stick';
+  // 暗号学的乱数（偏りの少ない乱数）
+  const rand = () => {
+    const a = new Uint32Array(1);
+    crypto.getRandomValues(a);
+    return a[0] / 4294967296;
+  };
+  const shuffle = arr => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const DEG = Math.PI / 180;
 
-                // 右側（数字）の箱の場合は先端黒のクラスを付与
-                if (side === 'right') {
-                    stick.classList.add('black-top');
-                }
+  const state = {};
+  const modal = document.getElementById('modal');
+  const reveal = document.getElementById('reveal');
+  let revealSkip = null;
 
-                // ガサッとした自然な配置にするための計算
-                const baseX = (Math.random() - 0.5) * 40; // 左右の散らばり
-                const angle = (Math.random() - 0.5) * 24; // 傾き（-12度〜+12度）
-                const y = Math.random() * 20;             // 高さのばらつき
-                const z = Math.floor(Math.random() * 27); // 重なり順
+  function buildSide(side) {
+    const root = document.getElementById('side-' + side);
+    const sticksEl = root.querySelector('.sticks');
+    const area = root.querySelector('.box-area');
+    const chars = [];
+    SETS[side].forEach(c => { for (let k = 0; k < 3; k++) chars.push(c); });
 
-                stick.style.setProperty('--base-angle', `${angle}deg`);
-                stick.style.setProperty('--base-x', `${baseX}px`);
-                stick.style.setProperty('--base-y', `${y}px`);
-                stick.style.setProperty('--base-z', z);
+    const buttons = [], sim = [];
+    for (let i = 0; i < COUNT; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'stick' + (side === 'num' ? ' num' : '');
+      b.setAttribute('aria-label', NAMES[side] + 'の棒');
+      b.addEventListener('click', () => draw(side, i));
+      sticksEl.appendChild(b);
+      buttons.push(b);
+      // x: 箱の縁を通過する位置(%) / r: 傾き(deg) / l: 持ち上がり(px)
+      sim.push({ x:50, r:0, l:0, vx:0, vr:0, vl:0, tx:50, tr:0, tl:0, amp:0, phase:0 });
+    }
+    state[side] = { root, area, sticksEl, chars, buttons, sim, width: area.clientWidth,
+                    drawn: null, busy: false };
+    shuffle(chars);
+    setTargets(side);
+    reorderZ(side);
+    sim.forEach(p => { p.x = p.tx; p.r = p.tr; p.l = p.tl; });
+    render(side, 0, 0);
+  }
 
-                const textSpan = document.createElement('span');
-                textSpan.className = 'stick-text';
-                textSpan.textContent = value;
+  // 「棒が箱の縁を通過する位置」を箱の口の内側で決め、そこから根元の位置を逆算する
+  // → どんなに傾いても、棒は必ず箱の口の中から生えて見える
+  function setTargets(side) {
+    const s = state[side];
+    const slots = shuffle([...Array(COUNT).keys()]);
+    s.sim.forEach((p, i) => {
+      const x = 12 + slots[i] * (76 / (COUNT - 1)) + (rand() - .5) * 2;
+      p.tx = x;
+      p.tr = (x - 50) * 0.32 + (rand() - .5) * 12;
+      p.tl = rand() * 52;
+    });
+  }
+  function reorderZ(side) {
+    const zs = shuffle([...Array(COUNT).keys()]);
+    state[side].buttons.forEach((b, i) => { b.style.zIndex = 10 + zs[i]; });
+  }
 
-                stick.appendChild(textSpan);
+  function render(side, swayEnv, t) {
+    const s = state[side];
+    const W = s.width;
+    s.buttons.forEach((b, i) => {
+      const p = s.sim[i];
+      const h = RIM_Y - (PIVOT_Y + p.l);                  // 根元から縁までの高さ
+      const pivot = p.x / 100 * W - h * Math.tan(p.r * DEG);
+      const sway = swayEnv ? p.amp * swayEnv * Math.sin(2 * Math.PI * 1.8 * t - p.phase) : 0;
+      b.style.setProperty('--tx', (pivot - STICK_W / 2).toFixed(2) + 'px');
+      b.style.setProperty('--r', (p.r + sway).toFixed(3));
+      b.style.setProperty('--lift', p.l.toFixed(2));
+    });
+  }
 
-                // クリックイベントの登録
-                stick.addEventListener('click', () => handleStickClick(stick, value, side, container));
+  async function draw(side, i) {
+    const s = state[side];
+    if (s.drawn !== null || s.busy) return;
+    s.busy = true;
+    const b = s.buttons[i];
+    const ch = s.chars[i];
+    s.drawn = ch;
+    s.root.classList.add('done');
+    b.classList.add('pulling');
 
-                container.appendChild(stick);
-            });
-        }
+    await wait(reduceMotion ? 0 : 380);
+    b.classList.add('gone');
+    await showReveal(side, ch);   // 画面中央で棒を見せ、受け皿へ送る
+    fillSlot(side, ch);
+    s.busy = false;
 
-        // 棒がクリックされたときの処理
-        function handleStickClick(stick, value, side, container) {
-            // 既に引かれた後なら何もしない
-            if (container.classList.contains('disabled')) return;
+    const other = side === 'kanji' ? 'num' : 'kanji';
+    if (state[other].drawn !== null) {
+      await wait(500);
+      openModal();
+    } else {
+      // スマホで次の箱が画面外なら、そこまでスクロール
+      const r = state[other].area.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > window.innerHeight - 90) {
+        state[other].area.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+      }
+    }
+  }
 
-            // コンテナを無効化し、クリックした棒を上に引き出す
-            container.classList.remove('active');
-            container.classList.add('disabled');
-            stick.classList.add('pulled');
+  function showReveal(side, ch) {
+    return new Promise(async resolve => {
+      const inner = reveal.querySelector('.reveal-inner');
+      const stick = reveal.querySelector('.reveal-stick');
+      stick.className = 'reveal-stick' + (side === 'num' ? ' num' : '');
+      stick.querySelector('.char').textContent = ch;
+      reveal.querySelector('.reveal-caption').textContent = NAMES[side] + 'の棒';
+      inner.style.transform = ''; inner.style.opacity = '';
+      reveal.classList.remove('leaving');
+      // アニメーションを毎回最初から
+      inner.style.animation = 'none'; void inner.offsetWidth; inner.style.animation = '';
+      reveal.classList.add('open');
 
-            if (side === 'left') {
-                leftResultValue = value;
-                btnShakeLeft.disabled = true;
-            } else {
-                rightResultValue = value;
-                btnShakeRight.disabled = true;
-            }
+      // 見せる時間（タップで早送り）
+      await Promise.race([wait(reduceMotion ? 900 : 1500), new Promise(r => { revealSkip = r; })]);
+      revealSkip = null;
 
-            checkGameComplete();
-        }
+      if (!reduceMotion) {
+        // 受け皿のスロットへ吸い込まれるように移動
+        const slot = document.querySelector(`.slot[data-side="${side}"] .slot-chip`).getBoundingClientRect();
+        const box = inner.getBoundingClientRect();
+        const dx = (slot.left + slot.width / 2) - (box.left + box.width / 2);
+        const dy = (slot.top + slot.height / 2) - (box.top + box.height / 2);
+        reveal.classList.add('leaving');
+        inner.style.transform = `translate(${dx}px, ${dy}px) scale(.15)`;
+        inner.style.opacity = '.2';
+        await wait(550);
+      }
+      reveal.classList.remove('open', 'leaving');
+      resolve();
+    });
+  }
+  reveal.addEventListener('click', () => { if (revealSkip) revealSkip(); });
 
-        // 両方引かれたかチェック
-        function checkGameComplete() {
-            if (leftResultValue !== null && rightResultValue !== null) {
-                setTimeout(() => {
-                    showModal();
-                }, 1000); // 棒が引かれきるのを待ってから表示
-            }
-        }
+  function fillSlot(side, ch) {
+    const slot = document.querySelector(`.slot[data-side="${side}"]`);
+    slot.querySelector('.slot-chip').textContent = ch;
+    slot.classList.remove('filled'); void slot.offsetWidth;
+    slot.classList.add('filled');
+  }
+  function clearSlot(side) {
+    const slot = document.querySelector(`.slot[data-side="${side}"]`);
+    slot.classList.remove('filled');
+    slot.querySelector('.slot-chip').textContent = '？';
+  }
 
-        // 結果モーダルを表示
-        function showModal() {
-            // ご要望通り、カッコを外して中黒（・）で繋ぐフォーマット
-            elFinalResultText.innerHTML = `<span>${leftResultValue}・${rightResultValue}</span>`;
-            elResultModal.classList.add('show');
-        }
+  function resetSide(side) {
+    const s = state[side];
+    s.drawn = null;
+    s.root.classList.remove('done');
+    s.buttons.forEach(b => b.classList.remove('pulling', 'gone'));
+    clearSlot(side);
+  }
 
-        // 振った際の見た目のシャッフル
-        function shuffleSticksVisuals(container) {
-            const sticks = container.querySelectorAll('.stick:not(.pulled)');
-            sticks.forEach(stick => {
-                const baseX = (Math.random() - 0.5) * 40;
-                const angle = (Math.random() - 0.5) * 24;
-                const y = Math.random() * 20;
-                const z = Math.floor(Math.random() * 27);
+  /* ---------- 振る：ばね＋減衰振動で毎フレーム動かす ---------- */
+  function shake(side) {
+    const s = state[side];
+    if (s.busy) return;
+    s.busy = true;
+    // 引いた棒は箱に戻さない（連続で引き直せないように）
+    shuffle(s.chars);
+    s.width = s.area.clientWidth;
 
-                stick.style.setProperty('--base-angle', `${angle}deg`);
-                stick.style.setProperty('--base-x', `${baseX}px`);
-                stick.style.setProperty('--base-y', `${y}px`);
-                stick.style.setProperty('--base-z', z);
-            });
-        }
+    if (reduceMotion) {
+      setTargets(side); reorderZ(side);
+      s.sim.forEach(p => { p.x = p.tx; p.r = p.tr; p.l = p.tl; });
+      render(side, 0, 0);
+      s.busy = false;
+      return;
+    }
 
-        // 箱を振るアクション
-        function handleShake(boxId, sticksId, button) {
-            const box = document.getElementById(boxId);
-            const sticksContainer = document.getElementById(sticksId);
+    s.root.classList.add('animating');
+    s.sim.forEach(p => { p.amp = 2 + rand() * 3.5; p.phase = 0.4 + rand() * 1.2; });
+    setTargets(side);
 
-            if (sticksContainer.classList.contains('disabled') || button.disabled) return;
+    const K = 34, C = 9.5;
+    const FREQ = 1.8, DECAY = 2.0, DURATION = 1.6;
+    let t = 0, last = performance.now();
+    let stage2 = false, zDone = false;
 
-            button.disabled = true;
-            box.classList.add('shaking');
+    function frame(now) {
+      const dt = Math.min((now - last) / 1000, 1 / 30);
+      last = now;
+      t += dt;
 
-            // 揺れている最中に数回再配置して混ざっている感を出す
-            let shuffleCount = 0;
-            const interval = setInterval(() => {
-                shuffleSticksVisuals(sticksContainer);
-                shuffleCount++;
-                if (shuffleCount > 3) clearInterval(interval);
-            }, 120);
+      if (!zDone && t > 0.28) { reorderZ(side); zDone = true; }
+      if (!stage2 && t > 0.5) { setTargets(side); stage2 = true; }
 
-            setTimeout(() => {
-                box.classList.remove('shaking');
-                shuffleSticksVisuals(sticksContainer);
-                button.disabled = false;
-            }, 500);
-        }
+      let moving = false;
+      for (const p of s.sim) {
+        p.vx += ((p.tx - p.x) * K - p.vx * C) * dt; p.x += p.vx * dt;
+        p.vr += ((p.tr - p.r) * K - p.vr * C) * dt; p.r += p.vr * dt;
+        p.vl += ((p.tl - p.l) * K - p.vl * C) * dt; p.l += p.vl * dt;
+        if (Math.abs(p.vx) + Math.abs(p.vr) + Math.abs(p.vl) > 0.05 ||
+            Math.abs(p.tx - p.x) + Math.abs(p.tr - p.r) + Math.abs(p.tl - p.l) > 0.05) moving = true;
+      }
 
-        // ゲーム初期化
-        function initGame() {
-            elResultModal.classList.remove('show');
-            leftResultValue = null;
-            rightResultValue = null;
-            btnShakeLeft.disabled = false;
-            btnShakeRight.disabled = false;
+      const env = (1 - Math.exp(-t * 10)) * Math.exp(-DECAY * t);
+      const ang = 5.5 * env * Math.sin(2 * Math.PI * FREQ * t);
+      const dx  = 15 * env * Math.sin(2 * Math.PI * FREQ * t + 0.35);
+      s.area.style.transform = `translate3d(${dx.toFixed(2)}px,0,0) rotate(${ang.toFixed(3)}deg)`;
 
-            const leftDeck = generateShuffledDeck(KANJI_BASE);
-            const rightDeck = generateShuffledDeck(NUMBER_BASE);
+      render(side, env, t);
 
-            // renderSticksの第3引数でleft/rightを識別
-            renderSticks(elLeftSticks, leftDeck, 'left');
-            renderSticks(elRightSticks, rightDeck, 'right');
-        }
+      if (t < DURATION || moving) {
+        requestAnimationFrame(frame);
+      } else {
+        s.sim.forEach(p => { p.x = p.tx; p.r = p.tr; p.l = p.tl; p.vx = p.vr = p.vl = 0; });
+        render(side, 0, 0);
+        s.area.style.transform = '';
+        s.root.classList.remove('animating');
+        s.busy = false;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
 
-        // イベントリスナーのバインド
-        btnRetry.addEventListener('click', initGame);
-        btnShakeLeft.addEventListener('click', () => handleShake('left-box', 'left-sticks', btnShakeLeft));
-        btnShakeRight.addEventListener('click', () => handleShake('right-box', 'right-sticks', btnShakeRight));
+  function openModal() {
+    const out = document.getElementById('modal-result');
+    out.innerHTML = '';
+    const a = document.createElement('span'); a.textContent = state.kanji.drawn;
+    const d = document.createElement('span'); d.className = 'dot'; d.textContent = '・';
+    const n = document.createElement('span'); n.textContent = state.num.drawn;
+    out.append(a, d, n);
+    modal.classList.add('open');
+    document.getElementById('again').focus();
+  }
 
-        // ページ読み込み時に初期化
-        window.onload = initGame;
-    </script>
+  buildSide('kanji');
+  buildSide('num');
+
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      ['kanji', 'num'].forEach(side => {
+        const s = state[side];
+        s.width = s.area.clientWidth;
+        if (!s.root.classList.contains('animating')) render(side, 0, 0);
+      });
+    }, 80);
+  });
+
+  document.querySelectorAll('.shake-btn').forEach(btn =>
+    btn.addEventListener('click', () => shake(btn.dataset.side)));
+
+  // 「もう一度引く」→ 1日1回のメッセージ（ページを再読み込みすればまた引ける）
+  document.getElementById('again').addEventListener('click', e => {
+    e.currentTarget.closest('.modal-actions').hidden = true;
+    const msg = document.getElementById('limit-msg');
+    msg.hidden = false;
+    msg.focus();
+  });
+})();
+</script>
 </body>
 </html>
