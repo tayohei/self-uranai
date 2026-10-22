@@ -547,10 +547,9 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     slot.classList.add('filled');
   }
   /* ---------- 振る：ばね＋減衰振動で毎フレーム動かす ---------- */
-  function shake(side) {
+  // 1つの箱を振る。ロックは呼び出し側(shakeSides)が持ち、終わったら done を呼ぶ
+  function runShake(side, done) {
     const s = state[side];
-    if (busy || s.drawn !== null) return;
-    busy = true;
     // 引いた棒は箱に戻さない（連続で引き直せないように）
     shuffle(s.chars);
     s.width = s.area.clientWidth;
@@ -559,7 +558,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
       setTargets(side); reorderZ(side);
       s.sim.forEach(p => { p.x = p.tx; p.r = p.tr; p.l = p.tl; });
       render(side, 0, 0);
-      busy = false;
+      done();
       return;
     }
 
@@ -603,10 +602,58 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
         render(side, 0, 0);
         s.area.style.transform = '';
         s.root.classList.remove('animating');
-        busy = false;
+        done();
       }
     }
     requestAnimationFrame(frame);
+  }
+
+  // 引いていない箱をすべて同時に振る（片方だけ引いていれば残りの箱、両方引いていれば何もしない）
+  function shakeSides(sides) {
+    const targets = sides.filter(side => state[side].drawn === null);
+    if (busy || !targets.length) return;
+    busy = true;
+    let left = targets.length;
+    targets.forEach(side => runShake(side, () => { if (--left === 0) busy = false; }));
+  }
+
+  /* ---------- スマホを振って箱を振る ---------- */
+  const SHAKE_THRESHOLD = 15;   // m/s²。重力を除いた加速度がこれを超えたら「一振り」
+  const SHAKE_COUNT = 3;        // SHAKE_WINDOW の間にこの回数で「振った」と判定
+  const SHAKE_WINDOW = 1000;    // ms
+  const SHAKE_PEAK_GAP = 120;   // ms。同じ一振りを二重に数えない
+  let peaks = [];
+
+  window.addEventListener('devicemotion', e => {
+    if (busy || modal.classList.contains('open') || document.hidden) return;
+    let m;
+    const a = e.acceleration;
+    if (a && a.x != null) {
+      m = Math.hypot(a.x, a.y, a.z);
+    } else {                    // 重力込みの値しか取れない端末
+      const g = e.accelerationIncludingGravity;
+      if (!g || g.x == null) return;
+      m = Math.abs(Math.hypot(g.x, g.y, g.z) - 9.81);
+    }
+    if (m < SHAKE_THRESHOLD) return;
+    const now = performance.now();
+    if (peaks.length && now - peaks[peaks.length - 1] < SHAKE_PEAK_GAP) return;
+    peaks = peaks.filter(t => now - t < SHAKE_WINDOW);
+    peaks.push(now);
+    if (peaks.length >= SHAKE_COUNT) {
+      peaks = [];
+      shakeSides(['kanji', 'num']);
+    }
+  });
+
+  // iOS はモーションセンサーの許可を、タップの中で求める決まり。
+  // 専用ボタンは置かず、最初のタップで一度だけ求める（許可されなくてもボタン操作で遊べる）
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    const askMotionPermission = () => {
+      document.removeEventListener('click', askMotionPermission, true);
+      DeviceMotionEvent.requestPermission().catch(() => {});
+    };
+    document.addEventListener('click', askMotionPermission, true);
   }
 
   // モーダル表示中は背景を inert にして、フォーカスもスクリーンリーダーも背景へ出さない
@@ -805,7 +852,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   });
 
   document.querySelectorAll('.shake-btn').forEach(btn =>
-    btn.addEventListener('click', () => shake(btn.dataset.side)));
+    btn.addEventListener('click', () => shakeSides([btn.dataset.side])));
 
   // 「もう一度引く」→ 1日1回のメッセージ（ページを再読み込みすればまた引ける）
   document.getElementById('again').addEventListener('click', e => {
