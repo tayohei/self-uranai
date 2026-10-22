@@ -619,7 +619,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
 
   /* ---------- スマホを振って箱を振る ---------- */
   const SHAKE_THRESHOLD = 15;   // m/s²。重力を除いた加速度がこれを超えたら「一振り」
-  const SHAKE_COUNT = 3;        // SHAKE_WINDOW の間にこの回数で「振った」と判定
+  const SHAKE_COUNT = 2;        // SHAKE_WINDOW の間にこの回数で「振った」と判定
   const SHAKE_WINDOW = 1000;    // ms
   const SHAKE_PEAK_GAP = 120;   // ms。同じ一振りを二重に数えない
   let peaks = [];
@@ -647,13 +647,13 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   });
 
   // iOS はモーションセンサーの許可を、タップの中で求める決まり。
-  // 専用ボタンは置かず、最初のタップで一度だけ求める（許可されなくてもボタン操作で遊べる）
-  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-    const askMotionPermission = () => {
-      document.removeEventListener('click', askMotionPermission, true);
-      DeviceMotionEvent.requestPermission().catch(() => {});
-    };
-    document.addEventListener('click', askMotionPermission, true);
+  // 「振る」ボタンを押したときに一度だけ求め、答えが出たらそのままボタンの振る動作を続ける
+  // （許可されなくてもボタン操作で遊べる）
+  let motionAsked = !(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function');
+  async function askMotionPermission() {
+    if (motionAsked) return;
+    motionAsked = true;
+    try { await DeviceMotionEvent.requestPermission(); } catch (e) { /* 拒否・非対応は何もしない */ }
   }
 
   // モーダル表示中は背景を inert にして、フォーカスもスクリーンリーダーも背景へ出さない
@@ -852,7 +852,10 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   });
 
   document.querySelectorAll('.shake-btn').forEach(btn =>
-    btn.addEventListener('click', () => shakeSides([btn.dataset.side])));
+    btn.addEventListener('click', async () => {
+      await askMotionPermission();
+      shakeSides([btn.dataset.side]);
+    }));
 
   // 「もう一度引く」→ 1日1回のメッセージ（ページを再読み込みすればまた引ける）
   document.getElementById('again').addEventListener('click', e => {
