@@ -263,6 +263,9 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
 .btn.primary{background:var(--shu);border-color:var(--shu);color:#fff8ec}
 .btn:focus-visible{outline:3px solid #c99a2e;outline-offset:2px}
 [hidden]{display:none !important}
+.share-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.share-actions .btn{font-size:14px;padding:8px 14px}
+.share-status{min-height:1.7em;margin-top:8px;font-size:13px;color:#5b4d3e}
 .limit-msg{
   margin:4px auto 0;padding:16px 12px;
   border:1px solid rgba(168,58,44,.45);border-radius:3px;
@@ -340,6 +343,12 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     <div class="modal-actions">
       <button class="btn primary" type="button" id="again">もう一度引く</button>
     </div>
+    <div class="share-actions">
+      <button class="btn" type="button" id="save-img">画像を保存</button>
+      <button class="btn" type="button" id="copy-text">コピー</button>
+      <button class="btn" type="button" id="share" hidden>シェア</button>
+    </div>
+    <div class="share-status" id="share-status" role="status" aria-live="polite"></div>
     <div class="limit-msg" id="limit-msg" tabindex="-1" role="status" hidden>
       うらない棒は1日1回です。<br>今日は出た内容を心に受け止めて、<br>がんばりましょう！
     </div>
@@ -587,6 +596,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   const setBackgroundInert = on =>
     document.querySelectorAll('.wrap, .tray').forEach(el => { el.inert = on; });
   let returnFocus = null;
+  let imageBlob = null;   // 結果画像(PNG Blob)の Promise
 
   function openModal() {
     const out = document.getElementById('modal-result');
@@ -596,6 +606,7 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     const n = document.createElement('span'); n.textContent = state.num.drawn;
     out.append(a, d, n);
     returnFocus = document.activeElement;
+    imageBlob = renderImage().catch(() => null);   // シェアはタップ直後でないと拒否される端末があるので先に作る
     setBackgroundInert(true);
     modal.classList.add('open');
     document.getElementById('again').focus();
@@ -614,6 +625,133 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
   });
+
+  /* ---------- 結果の画像化・コピー・シェア ---------- */
+  const SITE_TITLE = 'セルフうらない棒 ～導きの竹棒～';
+  const isHttp = /^https?:$/.test(location.protocol);
+  const resultText = () => `セルフうらない棒で「${state.kanji.drawn}・${state.num.drawn}」を引きました。` +
+    (isHttp ? `\n${location.href}` : '');
+  const today = () => new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // 結果カードを 1080x1350 の PNG として描く
+  async function renderImage() {
+    const kanji = state.kanji.drawn, num = state.num.drawn;
+    try {
+      await Promise.all([
+        document.fonts.load('200px "Yuji Syuku"', kanji + num + '・' + SITE_TITLE),
+        document.fonts.load('40px "Zen Old Mincho"', 'この組み合わせから')
+      ]);
+    } catch (e) { /* フォントが読めなければフォールバック書体で描く */ }
+
+    const W = 1080, H = 1350, cx = W / 2;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.textAlign = 'center';
+    g.textBaseline = 'alphabetic';
+
+    // 壁
+    const wall = g.createRadialGradient(cx, H * .2, 0, cx, H * .2, H);
+    wall.addColorStop(0, '#b9ab93'); wall.addColorStop(.55, '#a89a83'); wall.addColorStop(1, '#8d7f69');
+    g.fillStyle = wall; g.fillRect(0, 0, W, H);
+
+    // 紙
+    const px = 90, py = 150, pw = W - 180, ph = 1000;
+    g.save();
+    g.shadowColor = 'rgba(40,28,15,.45)'; g.shadowBlur = 50; g.shadowOffsetY = 24;
+    g.fillStyle = '#fbfaf6'; g.fillRect(px, py, pw, ph);
+    g.restore();
+    g.fillStyle = '#a83a2c'; g.fillRect(px, py, pw, 16);
+
+    const mincho = '"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif';
+    const brush = '"Yuji Syuku","Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif';
+    const spaced = (text, y, gap) => {      // canvas の letterSpacing は古い端末で使えないので手書き
+      const chars = [...text];
+      const widths = chars.map(ch => g.measureText(ch).width);
+      let x = cx - (widths.reduce((a, b) => a + b, 0) + gap * (chars.length - 1)) / 2;
+      g.textAlign = 'left';
+      chars.forEach((ch, i) => { g.fillText(ch, x, y); x += widths[i] + gap; });
+      g.textAlign = 'center';
+    };
+
+    g.fillStyle = '#5b4d3e'; g.font = `36px ${mincho}`;
+    spaced('引いた棒', py + 150, 14);
+
+    // 結果「漢字・数字」を横一列に（幅に収まるよう大きさを調整）
+    let size = 240;
+    const parts = [kanji, '・', num];
+    const total = () => parts.reduce((a, t) => a + g.measureText(t).width, 0) + 2 * size * .08;
+    g.font = `${size}px ${brush}`;
+    while (total() > pw - 120 && size > 80) { size -= 8; g.font = `${size}px ${brush}`; }
+    let x = cx - total() / 2;
+    g.textAlign = 'left';
+    parts.forEach(t => {
+      g.fillStyle = t === '・' ? '#a83a2c' : '#1c140c';
+      g.fillText(t, x, py + 450);
+      x += g.measureText(t).width + size * .08;
+    });
+    g.textAlign = 'center';
+
+    g.fillStyle = '#2a241d'; g.font = `38px ${mincho}`;
+    g.fillText('この組み合わせから、ご自身の想いで', cx, py + 640);
+    g.fillText('読み解いてみてください。', cx, py + 700);
+
+    g.fillStyle = '#7a6b58'; g.font = `32px ${mincho}`;
+    g.fillText(today(), cx, py + 860);
+
+    g.fillStyle = '#2b2219'; g.font = `50px ${brush}`;
+    spaced(SITE_TITLE, py + ph + 120, 6);
+
+    return new Promise((resolve, reject) =>
+      c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png'));
+  }
+
+  const statusEl = document.getElementById('share-status');
+  let statusTimer;
+  const setStatus = msg => {
+    statusEl.textContent = msg;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => { statusEl.textContent = ''; }, 3500);
+  };
+
+  document.getElementById('save-img').addEventListener('click', async () => {
+    const blob = await imageBlob;
+    if (!blob) return setStatus('画像を作れませんでした');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `uranai-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    setStatus('画像を保存しました');
+  });
+
+  document.getElementById('copy-text').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(resultText());
+      setStatus('コピーしました');
+    } catch (e) {
+      setStatus('コピーできませんでした');
+    }
+  });
+
+  const shareBtn = document.getElementById('share');
+  if (navigator.share) {
+    shareBtn.hidden = false;
+    shareBtn.addEventListener('click', async () => {
+      const data = { title: SITE_TITLE, text: resultText().split('\n')[0] };
+      if (isHttp) data.url = location.href;
+      const blob = await imageBlob;
+      if (blob) {
+        const file = new File([blob], 'uranai.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file];
+      }
+      try {
+        await navigator.share(data);
+      } catch (e) {
+        if (e.name !== 'AbortError') setStatus('シェアできませんでした');
+      }
+    });
+  }
 
   buildSide('kanji');
   buildSide('num');
