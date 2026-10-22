@@ -21,13 +21,19 @@
   --brush:"Yuji Syuku","Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
   --mincho:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
   --paper-fiber:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.03 .55' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55 0 0 0 0 .5 0 0 0 0 .42 0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+
+  /* 棒の寸法。JS(render)も同じ値を読むので、ここだけ直せばよい */
+  --stick-w:14px;
+  --stick-h:314px;
+  --pivot-y:-30px;   /* 棒の根元の高さ（箱の底から） */
+  --rim-y:166px;     /* 箱の縁の高さ（箱の底から） */
 }
+html{box-sizing:border-box}
 *,*::before,*::after{box-sizing:inherit}
 html,body{margin:0}
 body{
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
   min-height:100vh;
   color:var(--ink);
   font-family:var(--mincho);
@@ -95,9 +101,9 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   position:absolute;inset:0;
   clip-path:polygon(
     -300px -600px, calc(100% + 300px) -600px,
-    calc(100% + 300px) calc(100% - 166px), 95% calc(100% - 166px),
+    calc(100% + 300px) calc(100% - var(--rim-y)), 95% calc(100% - var(--rim-y)),
     95% calc(100% - 12px), 5% calc(100% - 12px),
-    5% calc(100% - 166px), -300px calc(100% - 166px));
+    5% calc(100% - var(--rim-y)), -300px calc(100% - var(--rim-y)));
 }
 .box-front{
   position:absolute;left:0;right:0;bottom:0;height:160px;z-index:200;
@@ -131,8 +137,8 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
 
 .stick{
   --dy:0px;--tx:0px;--r:0;--lift:0;
-  position:absolute;left:0;bottom:-30px;
-  width:14px;height:314px;padding:0;border:0;cursor:pointer;
+  position:absolute;left:0;bottom:var(--pivot-y);
+  width:var(--stick-w);height:var(--stick-h);padding:0;border:0;cursor:pointer;
   border-radius:4px 4px 2px 2px;
   transform-origin:50% 100%;will-change:transform;
   transform:translate3d(var(--tx), calc(var(--lift) * -1px), 0) rotate(calc(var(--r) * 1deg)) translateY(var(--dy));
@@ -344,9 +350,12 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   };
   const NAMES = { kanji: '漢字', num: '数字' };
   const COUNT = 27;
-  const STICK_W = 14;
-  const RIM_Y = 166;      // 箱の縁の高さ（箱の底からpx）
-  const PIVOT_Y = -30;    // 棒の根元の高さ（lift=0のとき）
+  // 棒の寸法はCSSのカスタムプロパティと共有（:root を参照）
+  const rootStyle = getComputedStyle(document.documentElement);
+  const cssPx = name => parseFloat(rootStyle.getPropertyValue(name));
+  const STICK_W = cssPx('--stick-w');
+  const RIM_Y = cssPx('--rim-y');       // 箱の縁の高さ（箱の底からpx）
+  const PIVOT_Y = cssPx('--pivot-y');   // 棒の根元の高さ（lift=0のとき）
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // 暗号学的乱数（偏りの少ない乱数）
@@ -498,20 +507,6 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
     slot.classList.remove('filled'); void slot.offsetWidth;
     slot.classList.add('filled');
   }
-  function clearSlot(side) {
-    const slot = document.querySelector(`.slot[data-side="${side}"]`);
-    slot.classList.remove('filled');
-    slot.querySelector('.slot-chip').textContent = '？';
-  }
-
-  function resetSide(side) {
-    const s = state[side];
-    s.drawn = null;
-    s.root.classList.remove('done');
-    s.buttons.forEach(b => b.classList.remove('pulling', 'gone'));
-    clearSlot(side);
-  }
-
   /* ---------- 振る：ばね＋減衰振動で毎フレーム動かす ---------- */
   function shake(side) {
     const s = state[side];
@@ -589,16 +584,13 @@ h1 .sub{display:block;font-size:clamp(20px,3.4vw,30px);letter-spacing:.2em;margi
   buildSide('kanji');
   buildSide('num');
 
-  let rt;
-  window.addEventListener('resize', () => {
-    clearTimeout(rt);
-    rt = setTimeout(() => {
-      ['kanji', 'num'].forEach(side => {
-        const s = state[side];
-        s.width = s.area.clientWidth;
-        if (!s.root.classList.contains('animating')) render(side, 0, 0);
-      });
-    }, 80);
+  // 箱の幅が変わったら（リサイズ・フォント読み込み後のレイアウト変化など）棒の位置を再計算
+  ['kanji', 'num'].forEach(side => {
+    const s = state[side];
+    new ResizeObserver(() => {
+      s.width = s.area.clientWidth;
+      if (!s.root.classList.contains('animating')) render(side, 0, 0);
+    }).observe(s.area);
   });
 
   document.querySelectorAll('.shake-btn').forEach(btn =>
